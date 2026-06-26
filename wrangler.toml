@@ -1,13 +1,15 @@
-{
-  "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "skipLibCheck": true,
-    "noEmit": true
-  },
-  "include": ["vite.config.ts"]
-}
+name                  = "mtflix"
+compatibility_date    = "2024-09-23"
+pages_build_output_dir = "dist"
+
+[[kv_namespaces]]
+binding    = "STORE_KV"
+id         = "6e659aa3210948a08b956b51ed05d7a0"
+
+[vars]
+ALLOWED_ORIGIN = "http://localhost:5173"
+
+# Production env vars → set in Cloudflare Dashboard (NOT here):
+# STRIPE_SECRET_KEY  = pk_test_51Tk9EGGcPLLrEooPeQTmCbPZJ3bEdlpVjOS7TUmukbS1P4UxRs1ra0zA0GlPpxACWj801po4bf7QX2qBeWfBHiaT001nayYhmP
+# ADMIN_TOKEN        = 5782ca441bdbc59a3726c1a6d74df86f405b2ac8780d56a0529555a80565a3cc
+# ALLOWED_ORIGIN     = https://mtflix.qzz.io
