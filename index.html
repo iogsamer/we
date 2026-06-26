@@ -1,0 +1,76 @@
+// ─── Product ───────────────────────────────────────────
+export interface Product {
+  id: string
+  name: string
+  category: string
+  price: number   // ILS
+  stock: number
+  badge: string
+  stars: number   // 1-5
+  image: string
+  desc: string
+}
+
+// ─── Cart ───────────────────────────────────────────────
+export interface CartItem {
+  id: string
+  qty: number
+}
+
+// ─── Order ─────────────────────────────────────────────
+export type OrderStatus = 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled'
+export type PayMethod   = 'Cash on Delivery' | 'Visa (Stripe)'
+
+export interface CustomerInfo {
+  first:   string
+  last:    string
+  phone:   string
+  address: string
+  city:    string
+  region:  string
+  notes:   string
+}
+
+export interface OrderItem {
+  id:    string
+  name:  string
+  price: number
+  qty:   number
+}
+
+export interface Order {
+  id:            string
+  customer:      CustomerInfo
+  items:         OrderItem[]
+  originalTotal: number
+  discount:      number
+  total:         number
+  payMethod:     PayMethod
+  paid:          boolean
+  status:        OrderStatus
+  date:          number
+}
+
+// ─── Settings ──────────────────────────────────────────
+export interface StoreSettings {
+  name:       string
+  wa:         string
+  stripePk:   string
+  promoCode:  string
+  promoDisc:  number   // percentage 0-99
+}
+
+// ─── API responses ─────────────────────────────────────
+export interface ApiOk<T = unknown> { success: true;  data?: T }
+export interface ApiErr             { error:   string           }
+export type     ApiResult<T>  = ApiOk<T> | ApiErr
+
+// ─── Admin session (in-memory only, never persisted) ───
+export interface AdminSession {
+  token:     string
+  expiresAt: number
+}
+
+// ─── Checkout steps ────────────────────────────────────
+export type CheckoutStep = 1 | 2 | 3
+export type PayChoice    = 'cod' | 'card'

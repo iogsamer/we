@@ -1,0 +1,63 @@
+// ─── HTML Escape (XSS prevention) ──────────────────────
+const ESC_MAP: Record<string, string> = {
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+}
+export function esc(s: unknown): string {
+  return String(s ?? '').replace(/[&<>"']/g, c => ESC_MAP[c] ?? c)
+}
+
+// ─── Safe URL (only http/https) ─────────────────────────
+export function safeUrl(url: string, fallback: string): string {
+  if (!url) return fallback
+  try {
+    const u = new URL(url)
+    return ['http:', 'https:'].includes(u.protocol) ? url : fallback
+  } catch { return fallback }
+}
+
+// ─── Phone validation (Israel + general) ───────────────
+export function validPhone(phone: string): boolean {
+  const clean = phone.replace(/[\s\-()]/g, '')
+  return /^(\+972|972|0)[5-9]\d{7,8}$/.test(clean) || /^\+[1-9]\d{7,14}$/.test(clean)
+}
+
+// ─── SHA-256 via Web Crypto API ─────────────────────────
+export async function sha256(msg: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg))
+  return Array.from(new Uint8Array(buf))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+// ─── Constant-time string comparison (timing-attack safe)
+export function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  return diff === 0
+}
+
+// ─── Strip dangerous chars from stored strings ──────────
+export function sanitize(s: unknown, maxLen = 200): string {
+  return String(s ?? '').replace(/[<>"'`]/g, '').slice(0, maxLen)
+}
+
+// ─── Generate collision-resistant Order ID ──────────────
+export function genOrderId(): string {
+  const ts  = Date.now().toString(36).toUpperCase()
+  const rnd = Math.random().toString(36).slice(2, 6).toUpperCase()
+  return `ORD-${ts}-${rnd}`
+}
+
+// ─── Format ILS price ───────────────────────────────────
+export function ils(amount: number): string {
+  return '₪' + amount.toLocaleString('he-IL', { maximumFractionDigits: 0 })
+}
+
+// ─── Date string ────────────────────────────────────────
+export function dateStr(ts: number): string {
+  return new Date(ts).toLocaleString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  })
+}

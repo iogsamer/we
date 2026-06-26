@@ -1,0 +1,179 @@
+# 🛍️ MTFLIX — Vite + React + Hono on Cloudflare
+
+## Stack
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18 + TypeScript + Vite |
+| State | Zustand (with localStorage persist) |
+| Backend API | Hono on Cloudflare Pages Functions |
+| Storage | Cloudflare KV |
+| Payments | Stripe (ILS ₪) |
+| Hosting | Cloudflare Pages (free) |
+
+---
+
+## 📁 Project Structure
+```
+mtflix/
+├── src/
+│   ├── components/
+│   │   ├── Admin.tsx       ← Full admin panel
+│   │   ├── Cart.tsx        ← Cart sidebar
+│   │   ├── Checkout.tsx    ← 3-step checkout + Stripe
+│   │   ├── Hero.tsx        ← Hero section
+│   │   ├── Nav.tsx         ← Navigation
+│   │   ├── Products.tsx    ← Product grid
+│   │   └── Toast.tsx       ← Notifications
+│   ├── api.ts              ← Typed API client
+│   ├── App.tsx             ← Root component
+│   ├── defaults.ts         ← Default products & settings
+│   ├── main.tsx            ← React entry point
+│   ├── security.ts         ← SHA-256, escape, validate
+│   ├── store.ts            ← Zustand store
+│   ├── styles.css          ← Complete design system
+│   ├── toast.ts            ← Toast pub/sub
+│   └── types.ts            ← TypeScript interfaces
+├── functions/
+│   └── api/
+│       └── [[route]].ts    ← Hono: payment, orders, products
+├── index.html
+├── package.json
+├── vite.config.ts
+├── tsconfig.json
+├── wrangler.toml
+├── _headers                ← CSP, HSTS, security headers
+└── README.md
+```
+
+---
+
+## 🚀 Quick Start (Local Dev)
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Start Vite dev server (frontend only)
+npm run dev
+
+# 3. Or run with Cloudflare Workers locally (full stack)
+npx wrangler pages dev dist --kv STORE_KV
+# → First build: npm run build, then run above
+```
+
+---
+
+## ☁️ Deploy to Cloudflare Pages
+
+### Step 1 — Push to GitHub
+```bash
+git init && git add . && git commit -m "MTFLIX init"
+git remote add origin https://github.com/YOUR/mtflix
+git push -u origin main
+```
+
+### Step 2 — Connect Cloudflare Pages
+1. [dash.cloudflare.com](https://dash.cloudflare.com) → **Pages → Create project → Connect to Git**
+2. Select your repo
+3. Build settings:
+   - **Framework:** Vite
+   - **Build command:** `npm run build`
+   - **Output directory:** `dist`
+4. **Save and Deploy**
+
+---
+
+## 🗄️ Step 3 — Cloudflare KV (orders + products persistence)
+
+```bash
+# Create KV namespace via CLI
+npx wrangler kv:namespace create STORE_KV
+# Copy the ID into wrangler.toml → kv_namespaces[].id
+
+npx wrangler kv:namespace create STORE_KV --preview
+# Copy into wrangler.toml → preview_id
+```
+
+Or via Dashboard: **Workers & Pages → KV → Create namespace** → name it `MTFLIX_STORE`
+
+Then bind it:
+**Pages project → Settings → Functions → KV namespace bindings**
+- Variable: `STORE_KV` → Namespace: `MTFLIX_STORE`
+
+---
+
+## 💳 Step 4 — Stripe Setup
+
+1. [stripe.com](https://stripe.com) → Sign up → Complete Israeli business verification
+2. **Developers → API Keys** → copy both keys
+
+Add to **Cloudflare Pages → Settings → Environment Variables**:
+
+| Variable | Value | Type |
+|----------|-------|------|
+| `STRIPE_SECRET_KEY` | `sk_live_xxxxxx` | **Secret** |
+| `ADMIN_TOKEN` | `5782ca441bdbc59a3726c1a6d74df86f405b2ac8780d56a0529555a80565a3cc` | **Secret** |
+| `ALLOWED_ORIGIN` | `https://your-project.pages.dev` | Plain text |
+
+Then in the store:
+1. Open Admin Panel (logo × 7)
+2. **Settings tab** → paste `pk_live_xxxxxx` → Save
+
+**Test mode card:** `4242 4242 4242 4242` · Any future date · Any CVC
+
+---
+
+## 🔐 Admin Panel
+
+| Item | Value |
+|------|-------|
+| Trigger | Click **MTFLIX logo** 7× quickly |
+| Password | `Mohammed@2024` |
+| Rate limit | 5 wrong attempts → 30s lockout |
+| Session | 2 hours, memory-only (never persisted) |
+
+### Tabs:
+- **📊 Dashboard** — stats, revenue chart, recent orders
+- **📦 Orders** — view, advance status, cancel, print, WhatsApp, live KV sync
+- **🏪 Products** — add / edit / delete (synced to KV)
+- **⚙️ Settings** — name, WhatsApp, Stripe key, promo code, discount
+
+---
+
+## 🔒 Security Implemented
+
+| Feature | Details |
+|---------|---------|
+| SHA-256 password | Web Crypto API, never stored plain |
+| Rate limiting | 5 attempts → 30s lockout, in-memory |
+| Session | Memory-only, 2h timeout, never in localStorage |
+| XSS | React JSX auto-escaping + manual esc() on templates |
+| URL validation | Only http/https accepted for images |
+| Phone validation | Israeli + international formats |
+| Amount validation | Server: min ₪10, max ₪100,000 |
+| Admin token | Constant-time comparison in Hono Worker |
+| CORS | Locked to ALLOWED_ORIGIN env var |
+| Server sanitisation | All string fields stripped of `<>"'\`` |
+| Duplicate orders | KV checks for existing order ID before insert |
+| CSP headers | `_headers` file: Stripe, fonts, no inline eval |
+
+---
+
+## 💵 Pricing
+
+All prices are in **₪ ILS** (Israeli Shekel) only. Stripe charges in ILS directly.
+The minimum Stripe charge is ₪10 (enforced server-side).
+
+---
+
+## 🆓 Cloudflare Free Tier
+
+| Service | Free Limit | MTFLIX Usage |
+|---------|-----------|-------------|
+| Pages | Unlimited sites | ✅ |
+| Workers (Functions) | 100k requests/day | ✅ |
+| KV reads | 100k/day | ✅ |
+| KV writes | 1k/day | ✅ (orders + products) |
+| KV storage | 1 GB | ✅ |
+
+**Zero cost** for a growing store.
